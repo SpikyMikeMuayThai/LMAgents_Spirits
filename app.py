@@ -1,3 +1,4 @@
+import numpy
 from flask import Flask, render_template
 from flask_socketio import SocketIO, emit
 import requests
@@ -9,12 +10,13 @@ import random
 import json
 import csv  # Import the CSV module
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='', static_folder='static')
 socketio = SocketIO(app, cors_allowed_origins="*")
 CORS(app, resources={r"/*": {"origins": "*"}})
 
 # Global token limit
 TOKEN_LIMIT = 2048
+
 
 class LMStudioAgent:
     def __init__(self, name, api_url, api_key, model, temperature=0.7, starting_prompt=""):
@@ -34,11 +36,11 @@ class LMStudioAgent:
 
     def respond(self, message):
         self.history.append({"role": "user", "content": message})
-        
+
         # Calculate the number of tokens to include in the context
         context_tokens = int(TOKEN_LIMIT * 0.5)
         context = self._get_context(context_tokens)
-        
+
         completion = self.client.chat.completions.create(
             model=self.model,
             messages=context,
@@ -53,7 +55,7 @@ class LMStudioAgent:
                 socketio.emit('new_message', {'role': self.name, 'content': new_message["content"]})
 
         self.history.append(new_message)
-        
+
         # Save the final message to a CSV file
         # try to save the message to a csv file, in case it fails, it will not break the code
         try:
@@ -63,7 +65,7 @@ class LMStudioAgent:
             print("Error saving message to CSV")
             # skip the line and continue
             pass
-        
+
         return new_message["content"]
 
     def _get_context(self, context_tokens):
@@ -83,10 +85,11 @@ class LMStudioAgent:
             writer = csv.writer(file)
             writer.writerow([self.name, message])
 
+
 def load_agents_from_config(config_file):
     with open(config_file, 'r') as f:
         config = json.load(f)
-    agents = []
+    fullAgents = []
     for agent_config in config:
         agent = LMStudioAgent(
             name=agent_config["name"],
@@ -96,38 +99,64 @@ def load_agents_from_config(config_file):
             temperature=agent_config["temperature"],
             starting_prompt=agent_config["starting_prompt"]
         )
-        agents.append(agent)
-    return agents
+        fullAgents.append(agent)
+    return fullAgents
 
-agents = load_agents_from_config('agents_config.json')
+
+fullAgents = load_agents_from_config('agents_config.json')
+
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
+
 @socketio.on('start_conversation')
 def handle_start_conversation(data):
     topic = data['topic']
-    socketio.emit('new_message', {'role': 'system', 'content': f"Starting conversation on topic: {topic}"})
+    amountChatbots = data['amountChatbots'] + 1
+    socketio.emit('new_message', {'role': 'Medium', 'content': f"I beseech ye Spirits! {topic}"})
+
+
+
+    agents = numpy.random.choice(fullAgents, amountChatbots, 0)
+    agentsLength = amountChatbots - 1
 
     for agent in agents:
         agent.reset_history()
         agent.history.append({"role": "user", "content": topic})
 
-    threading.Thread(target=run_conversation, args=(agents, topic)).start()
+    turns = agentsLength
 
-def run_conversation(agents, initial_message, num_turns=15):
+    if agentsLength > 1: threading.Thread(target=run_conversation, args=(agents, topic, turns)).start()
+    if agentsLength == 1: threading.Thread(target=run_conversation_alone, args=(agents, topic)).start()
+
+
+def run_conversation(agents, initial_message, num_turns):
     message = initial_message
-    last_agent = None
-    
+    last_agent = []
+
     for _ in range(num_turns):
-        available_agents = [agent for agent in agents if agent != last_agent]
+        available_agents = [agent for agent in agents if agent not in last_agent]
         agent = random.choice(available_agents)
         response = agent.respond(message)
         socketio.emit('new_message', {'role': agent.name, 'content': response})
         message = response
-        last_agent = agent
+        last_agent.append(agent)
         time.sleep(1)  # Add a delay between messages
+
+
+def run_conversation_alone(agents, initial_message, num_turns=1):
+    message = initial_message
+
+    for _ in range(num_turns):
+        available_agents = [agent for agent in agents if agent]
+        agent = random.choice(available_agents)
+        response = agent.respond(message)
+        socketio.emit('new_message', {'role': agent.name, 'content': response})
+        message = response
+        time.sleep(1)  # Add a delay between messages
+
 
 if __name__ == '__main__':
     socketio.run(app, debug=True)
