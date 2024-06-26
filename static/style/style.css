@@ -1,0 +1,172 @@
+@font-face {
+    font-family: Duality; src: url("../fonts/duality.otf");
+}
+@font-face {
+    font-family: Bloodcrow; src: url("../fonts/bloodcrow.ttf");
+}
+
+:root {
+    background: #111112;
+    color: #fcf0e1;
+    font-family: Duality, monospace;
+    letter-spacing: .2rem;
+}
+
+body {
+    height: 100vh;
+    width: 100vw;
+    background-image: url("/images/ouija.png");
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    position: absolute;
+}
+
+
+
+h1 {
+    font-family: Bloodcrow, monospace;
+    font-size: 4rem;
+}
+
+.outer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin: 5%;
+    gap: 1%;
+    animation: fadeIn 5s;
+}
+
+.message {
+    margin-bottom: 10px;
+}
+
+#chat {
+    height: 400px;
+    width: 600px;
+    overflow-y: auto;
+    padding: 20px;
+    display: none;
+    border-radius: 2px;
+    background-image: url("/images/swirl.png");
+    background-size: 100% 100%;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+#chat::-webkit-scrollbar {
+    display: none;
+}
+
+#id {
+    display: none;
+}
+
+#inputFields {
+    display: flex;
+    flex-direction: column;
+    margin: 5px;
+    gap: 1%;
+    width: 70%;
+}
+
+#reload {
+    display: none;
+}
+
+button {
+    padding: 1rem 2rem;
+    font-size: 1.25rem;
+    position: relative;
+    border: 2px solid white;
+    color: white;
+    background-color: transparent;
+    text-align: center;
+    margin-top: 2rem;
+}
+
+.button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    > * + * {
+        margin-top: 4rem;
+    }
+}
+
+.border {
+    &::after,
+    &::before,
+    span::after,
+    span::before {
+        content: "";
+        position: absolute;
+        background-color: white;
+        transition: 0.5s ease;
+    }
+
+    &::after,
+    &::before {
+        height: 100%;
+        width: 2px;
+        top: -2px;
+    }
+
+    &::after {
+        left: -2px;
+    }
+
+    &::before {
+        right: -2px;
+    }
+
+    span::after,
+    span::before {
+        height: 2px;
+        width: 100%;
+        left: -2px;
+    }
+    span::after {
+        top: -2px;
+    }
+
+    span::before {
+        bottom: -2px;
+    }
+
+    &:hover:after {
+        transform: translatex(-12px);
+    }
+
+    &:hover:before {
+        transform: translatex(12px);
+    }
+
+    &:hover span::after {
+        transform: translatey(-12px);
+    }
+
+    &:hover span::before {
+        transform: translatey(12px);
+    }
+}
+
+.question, .amount {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin: 5%;
+    gap: 1%;
+}
+
+label {
+    margin-bottom: 7px;
+}
+
+@keyframes fadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+}

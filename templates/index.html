@@ -2,33 +2,44 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Agent Chat</title>
+    <title>Spirit</title>
+    <link rel="stylesheet"  href="/style/style.css">
     <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
-    <style>
-        .message {
-            margin-bottom: 10px;
-        }
-        #chat {
-            max-height: 400px;
-            overflow-y: auto;
-            border: 1px solid #ccc;
-            padding: 10px;
-        }
-    </style>
+
 </head>
 <body>
-    <h1>Chat with Agents</h1>
-    <div id="chat"></div>
-    <input type="text" id="topic_input" placeholder="Enter a topic..." autocomplete="off"/>
-    <button onclick="startConversation()">Start Conversation</button>
+<div class="outer">
+    <h1>Commune with the Spirits</h1>
+    <div id="chat">
 
+
+    </div>
+
+    <div id="inputFields">
+        <div class="question">
+            <label for="topic_input">What does your mind desire?</label>
+            <input type="text" id="topic_input" placeholder="Enter your query..." autocomplete="off"/>
+        </div>
+        <div class="amount">
+            <label for="amountChatbots">How many spirits do you summon?</label>
+            <input type="number" placeholder="Spirits summoned" id="amountChatbots" min="1" max="5" inputmode="numeric" pattern="[0-9]*" onkeyup="enforceMinMax(this)"/>
+        </div>
+        <div class="button">
+            <button class="border" onclick="startConversation()">Commune</button>
+        </div>
+    </div>
+    <div class="button">
+        <button class="border" id="reload" onClick="window.location.reload();">Ask another question?</button>
+    </div>
+</div>
     <script>
-        var socket = io.connect('http://127.0.0.1:5000');
-        var currentMessageContainer = null;
-        var currentRole = null;
+        let socket = io.connect('http://127.0.0.1:5000');
+        let currentMessageContainer = null;
+        let currentRole = null;
 
         socket.on('new_message', function(msg) {
-            var chat = document.getElementById('chat');
+            let chat = document.getElementById('chat');
+
 
             // Check if the role has changed or if there is no current message container
             if (currentRole !== msg.role || !currentMessageContainer) {
@@ -45,10 +56,32 @@
         });
 
         function startConversation() {
-            var input = document.getElementById('topic_input');
-            var topic = input.value;
-            socket.emit('start_conversation', {topic: topic});
+            let chat = document.getElementById('chat');
+            let reload = document.getElementById('reload');
+            let input = document.getElementById('topic_input');
+            let topic = input.value;
+            let amount = document.getElementById('amountChatbots');
+            let amountChatbots = parseInt(amount.value)
+            let inputFields =document.getElementById('inputFields')
+
+            chat.style.display = 'block'
+            reload.style.display = 'block'
+            inputFields.style.display = 'none'
+
+
+            socket.emit('start_conversation', {topic: topic,amountChatbots: amountChatbots});
             input.value = '';
+        }
+
+        function enforceMinMax(el) {
+            if (el.value !== "") {
+                if (parseInt(el.value) < parseInt(el.min)) {
+                    el.value = el.min;
+                }
+                if (parseInt(el.value) > parseInt(el.max)) {
+                    el.value = el.max;
+                }
+            }
         }
     </script>
 </body>
